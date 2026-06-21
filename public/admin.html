@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard Owner - Monitoring Sales Cemilan</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+</head>
+<body class="bg-gray-900 text-gray-100 font-sans">
+    <div id="loginSection" class="max-w-md mx-auto mt-20 p-8 bg-gray-800 rounded-lg shadow-xl border border-gray-700">
+        <h2 class="text-2xl font-bold mb-6 text-center text-blue-400">Login Manajemen Admin</h2>
+        <input type="text" id="username" placeholder="Username Admin (Isi: admin)" class="w-full p-3 mb-4 rounded bg-gray-700 text-white border border-gray-600 focus:outline-none focus:border-blue-500">
+        <input type="password" id="password" placeholder="Password (Isi: password123)" class="w-full p-3 mb-6 rounded bg-gray-700 text-white border border-gray-600 focus:outline-none focus:border-blue-500">
+        <button onclick="login()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold p-3 rounded transition">Masuk Dashboard</button>
+    </div>
+
+    <div id="dashboardSection" class="hidden p-6 max-w-7xl mx-auto">
+        <div class="flex justify-between items-center mb-8 border-b border-gray-700 pb-4">
+            <div>
+                <h1 class="text-3xl font-extrabold text-blue-400">Panel Kontrol Distribusi Warung & Warkop</h1>
+                <p class="text-gray-400 text-sm">Sistem Proteksi Fraud GPS & Validasi Autentikasi Lapangan</p>
+            </div>
+            <button onclick="logout()" class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded text-sm font-semibold">Keluar Sistem</button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-gray-800 p-6 rounded-lg border border-gray-700 text-center">
+                <p class="text-gray-400 text-xs uppercase font-bold tracking-wider">Total Warung Terkunci</p>
+                <p id="statWarung" class="text-4xl font-bold text-blue-400 mt-1">0</p>
+            </div>
+            <div class="bg-gray-800 p-6 rounded-lg border border-gray-700 text-center">
+                <p class="text-gray-400 text-xs uppercase font-bold tracking-wider">Sales Lapangan Aktif</p>
+                <p id="statSales" class="text-4xl font-bold text-green-400 mt-1">0</p>
+            </div>
+            <div class="bg-gray-800 p-6 rounded-lg border border-gray-700 text-center">
+                <p class="text-gray-400 text-xs uppercase font-bold tracking-wider">Kunjungan Hari Ini</p>
+                <p id="statKunjungan" class="text-4xl font-bold text-purple-400 mt-1">0</p>
+            </div>
+            <div class="bg-gray-800 p-6 rounded-lg border border-gray-700 text-center">
+                <p class="text-gray-400 text-xs uppercase font-bold tracking-wider">Upaya Fraud Terdeteksi</p>
+                <p id="statFraud" class="text-4xl font-bold text-red-500 mt-1">0</p>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+            <div class="lg:col-span-2 bg-gray-800 p-4 rounded-lg border border-gray-700">
+                <h3 class="text-md font-bold mb-3 text-blue-300">Live Map Tracking Geofence</h3>
+                <div id="map" class="h-[400px] rounded bg-gray-700 shadow-inner"></div>
+            </div>
+            
+            <div class="bg-gray-800 p-6 rounded-lg border border-gray-700">
+                <h3 class="text-md font-bold mb-3 text-blue-300">Kunci & Daftarkan Warung Target Baru</h3>
+                <div class="space-y-3 text-xs">
+                    <div>
+                        <label class="block text-gray-400 mb-1">Nama Toko / Warkop</label>
+                        <input type="text" id="wName" class="w-full p-2 bg-gray-700 rounded text-white border border-gray-600">
+                    </div>
+                    <div>
+                        <label class="block text-gray-400 mb-1">Nama Pemilik Toko</label>
+                        <input type="text" id="wOwner" class="w-full p-2 bg-gray-700 rounded text-white border border-gray-600">
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-gray-400 mb-1">Latitude</label>
+                            <input type="text" id="wLat" class="w-full p-2 bg-gray-700 rounded text-white border border-gray-600 font-mono">
+                        </div>
+                        <div>
+                            <label class="block text-gray-400 mb-1">Longitude</label>
+                            <input type="text" id="wLng" class="w-full p-2 bg-gray-700 rounded text-white border border-gray-600 font-mono">
+                        </div>
+                    </div>
+                    <p class="text-[10px] text-amber-400 leading-tight">*Info: Klik sembarang lokasi di dalam peta untuk mengambil otomatis koordinat Latitude & Longitude toko.</p>
+                    <div>
+                        <label class="block text-gray-400 mb-1">Kode Token QR (Cetak di stiker & tempel di warung)</label>
+                        <input type="text" id="wToken" placeholder="Contoh: QR-WARKOP-01" class="w-full p-2 bg-gray-700 rounded text-white border border-gray-600 font-mono uppercase">
+                    </div>
+                    <button onclick="addWarung()" class="w-full bg-green-600 hover:bg-green-700 py-2.5 rounded font-bold text-white transition mt-2">Daftarkan & Amankan Warung</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-gray-800 p-6 rounded-lg border border-gray-700 shadow-md">
+            <h3 class="text-lg font-bold mb-4 text-blue-300">Laporan Aktivitas & Hasil Audit Kunjungan Sales</h3>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="border-b border-gray-700 text-gray-400 font-semibold text-xs tracking-wider uppercase">
+                            <th class="pb-3">Waktu Masuk</th>
+                            <th class="pb-3">Nama Karyawan</th>
+                            <th class="pb-3">Warung Target</th>
+                            <th class="pb-3">Deviasi Jarak GPS</th>
+                            <th class="pb-3 text-center">Status Validasi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="logTableBody" class="divide-y divide-gray-700 text-xs">
+                        </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let map, mapMarkers = [];
+
+        function login() {
+            const u = document.getElementById('username').value;
+            const p = document.getElementById('password').value;
+            fetch('/api/login', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({username: u, password: p})
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.success && data.user.role === 'ADMIN') {
+                    document.getElementById('loginSection').classList.add('hidden');
+                    document.getElementById('dashboardSection').classList.remove('hidden');
+                    initMap();
+                    loadDashboardData();
+                    setInterval(loadDashboardData, 4000); // Sinkronisasi otomatis data tiap 4 detik
+                } else {
+                    alert("Akses ditolak! Anda bukan admin.");
+                }
+            }).catch(() => alert("Gagal terhubung ke server backend!"));
+        }
+
+        function logout() { location.reload(); }
+
+        function initMap() {
+            map = L.map('map').setView([-6.2088, 106.8456], 13);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap'
+            }).addTo(map);
+
+            map.on('click', function(e) {
+                document.getElementById('wLat').value = e.latlng.lat.toFixed(6);
+                document.getElementById('wLng').value = e.latlng.lng.toFixed(6);
+            });
+        }
+
+        function loadDashboardData() {
+            fetch('/api/admin/dashboard')
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('statWarung').innerText = data.stats.totalWarung;
+                document.getElementById('statSales').innerText = data.stats.totalSales;
+                document.getElementById('statKunjungan').innerText = data.stats.totalKunjungan;
+                document.getElementById('statFraud').innerText = data.stats.totalFraud;
+
+                mapMarkers.forEach(m => map.removeLayer(m));
+                mapMarkers = [];
+
+                data.warungList.forEach(w => {
+                    let m = L.marker([w.latitude, w.longitude]).addTo(map)
+                        .bindPopup(`<b>${w.name}</b><br>Owner: ${w.owner}<br>Token QR: <code>${w.qrToken}</code>`);
+                    mapMarkers.push(m);
+                });
+
+                const tbody = document.getElementById('logTableBody');
+                tbody.innerHTML = '';
+                data.visitLogs.forEach(log => {
+                    let badgeColor = "bg-green-900/60 text-green-400 border border-green-700";
+                    if(log.status.includes('FRAUD')) {
+                        badgeColor = "bg-red-900/60 text-red-400 border border-red-700";
+                    }
+                    
+                    const row = `<tr>
+                        <td class="py-3 font-mono">${new Date(log.timestamp).toLocaleTimeString('id-ID')}</td>
+                        <td class="py-3 font-bold text-gray-200">${log.userName}</td>
+                        <td class="py-3 text-gray-300">${log.warungName}</td>
+                        <td class="py-3 font-mono text-amber-400">${log.distance} Meter</td>
+                        <td class="py-3 text-center"><span class="px-2.5 py-1 rounded-full text-[10px] font-bold ${badgeColor}">${log.status}</span></td>
+                    </tr>`;
+                    tbody.innerHTML += row;
+                });
+            });
+        }
+
+        function addWarung() {
+            const body = {
+                name: document.getElementById('wName').value,
+                owner: document.getElementById('wOwner').value,
+                latitude: document.getElementById('wLat').value,
+                longitude: document.getElementById('wLng').value,
+                qrToken: document.getElementById('wToken').value
+            };
+            fetch('/api/admin/warung', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(body)
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.success) {
+                    alert(data.message);
+                    loadDashboardData();
+                    ['wName', 'wOwner', 'wLat', 'wLng', 'wToken'].forEach(id => document.getElementById(id).value = '');
+                } else {
+                    alert(data.message);
+                }
+            });
+        }
+    </script>
+</body>
+</html>
